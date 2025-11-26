@@ -89,7 +89,7 @@ function renderList(filter=''){
   });
 }
 
-// Alerts: next maintenance items in future (or today)
+// Alerts
 function getUpcoming(days=30){
   const now = new Date();
   const out = [];
@@ -248,33 +248,15 @@ document.addEventListener('DOMContentLoaded', function(){
     load();
   });
 
+  // 🔥 YA NO SE CREAN APILADORAS AUTOMÁTICAS
   load(); 
-  ensureDemo(); 
+  // ensureDemo();   ← DESACTIVADO
   notifyUpcoming();
 });
 
-// initial demo data
+// Demo data eliminado
 function ensureDemo(){
-  if(apiladoras.length===0){
-    apiladoras.push({
-      id:uid(), 
-      name:'AP-125', 
-      code:'AP125', 
-      history:[
-        {id:uid(),desc:'Cambio de aceite',date:'2025-11-10',next:'2025-12-10'},
-        {id:uid(),desc:'Revisión de frenos',date:'2025-08-01',next:'2025-11-30'}
-      ]
-    });
-    apiladoras.push({
-      id:uid(), 
-      name:'AP-200', 
-      code:'AP200', 
-      history:[
-        {id:uid(),desc:'Ajuste de cadena',date:'2025-09-05',next:'2025-12-05'}
-      ]
-    });
-    save();
-  }
+  // vacío para evitar creación automática
 }
 
 // Notify on load
