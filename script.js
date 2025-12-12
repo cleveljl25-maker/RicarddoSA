@@ -1,21 +1,20 @@
-// ===============================
-// 🔥 Firebase SDK (MODULAR)
-// ===============================
+/* ===========================
+   🔥 FIREBASE SDK
+=========================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
-  addDoc,
   getDocs,
-  doc,
-  updateDoc,
-  arrayUnion,
-  onSnapshot,
-  query,
-  orderBy
+  addDoc,
+  deleteDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔴 PEGA AQUÍ TU CONFIG REAL
+/* ===========================
+   🔥 CONFIGURACIÓN FIREBASE
+   👉 REEMPLAZA SOLO ESTO
+=========================== */
 const firebaseConfig = {
   apiKey: "AIzaSyA6Ocj2bhf2zGAfakobaFIVS9qMQVwsVtY",
   authDomain: "ricardo-apiladoras.firebaseapp.com",
@@ -25,150 +24,215 @@ const firebaseConfig = {
   appId: "1:71506141186:web:c0f9f46d8a0bfca4e3071b"
 };
 
-// Init Firebase
+/* ===========================
+   🔥 INICIALIZAR FIREBASE
+=========================== */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const colApiladoras = collection(db, "apiladoras");
 
-// ===============================
-// 📌 ELEMENTOS DOM
-// ===============================
-const btnNew = document.getElementById("btnNew");
-const btnAddMaint = document.getElementById("btnAddMaint");
+/* ===========================
+   🔧 VARIABLES
+=========================== */
+let apiladoras = [];
+let selectedId = null;
 
-const apList = document.getElementById("apList");
-const totalCount = document.getElementById("totalCount");
+/* ===========================
+   🔧 UTILIDADES
+=========================== */
+const today = () => new Date().toISOString().slice(0, 10);
 
-const apDetails = document.getElementById("apDetails");
-const emptyState = document.getElementById("emptyState");
+/* ===========================
+   🔄 CARGAR DESDE FIRESTORE
+=========================== */
+async function cargarApiladoras() {
+  apiladoras = [];
+  const snapshot = await getDocs(colApiladoras);
 
-const apName = document.getElementById("apName");
-const apCode = document.getElementById("apCode");
-const nextMaint = document.getElementById("nextMaint");
+  snapshot.forEach(docu => {
+    apiladoras.push({ id: docu.id, ...docu.data() });
+  });
 
-const mDesc = document.getElementById("mDesc");
-const mDate = document.getElementById("mDate");
-const mNext = document.getElementById("mNext");
+  renderList();
+  renderAlerts();
+  document.getElementById("lastSync").innerText = new Date().toLocaleString();
+}
 
-const historyBox = document.getElementById("history");
-const lastSync = document.getElementById("lastSync");
+/* ===========================
+   🗑️ ELIMINAR APILADORA (🔥)
+=========================== */
+window.eliminarApiladora = async function (id) {
+  const ok = confirm("¿Seguro que deseas eliminar esta apiladora?");
+  if (!ok) return;
 
-// ===============================
-// 📦 ESTADO
-// ===============================
-let currentApiladoraId = null;
+  try {
+    await deleteDoc(doc(db, "apiladoras", id));
 
-// ===============================
-// ➕ NUEVA APILADORA
-// ===============================
-btnNew.addEventListener("click", async () => {
+    if (selectedId === id) {
+      selectedId = null;
+      document.getElementById("apDetails").style.display = "none";
+      document.getElementById("emptyState").style.display = "block";
+    }
+
+    await cargarApiladoras();
+  } catch (e) {
+    alert("Error al eliminar");
+    console.error(e);
+  }
+};
+
+/* ===========================
+   ➕ AGREGAR APILADORA
+=========================== */
+async function addApiladora() {
   const name = prompt("Nombre de la apiladora:");
   if (!name) return;
+  const code = prompt("Código o placa (opcional):") || "";
 
-  const code = prompt("Código:");
-  if (!code) return;
-
-  await addDoc(collection(db, "apiladoras"), {
+  await addDoc(colApiladoras, {
     name,
     code,
-    history: [],
-    createdAt: new Date()
+    history: []
   });
-});
 
-// ===============================
-// 📥 CARGAR APILADORAS (TIEMPO REAL)
-// ===============================
-const q = query(collection(db, "apiladoras"), orderBy("createdAt", "desc"));
+  await cargarApiladoras();
+}
 
-onSnapshot(q, (snapshot) => {
-  apList.innerHTML = "";
-  totalCount.textContent = snapshot.size;
+/* ===========================
+   📋 RENDER LISTA
+=========================== */
+function renderList(filter = "") {
+  const box = document.getElementById("apList");
+  box.innerHTML = "";
 
-  snapshot.forEach((docSnap) => {
-    const ap = docSnap.data();
+  let list = apiladoras;
+  if (filter) {
+    const q = filter.toLowerCase();
+    list = list.filter(a =>
+      a.name.toLowerCase().includes(q) ||
+      (a.code || "").toLowerCase().includes(q)
+    );
+  }
+
+  document.getElementById("totalCount").innerText = list.length;
+
+  if (list.length === 0) {
+    box.innerHTML = `<div class="muted">No hay apiladoras</div>`;
+    return;
+  }
+
+  list.forEach(a => {
     const div = document.createElement("div");
-    div.className = "item";
+    div.className = "ap-item";
+
     div.innerHTML = `
-      <strong>${ap.name}</strong>
-      <div class="muted">Código: ${ap.code}</div>
+      <div>
+        <strong>${a.name}</strong>
+        <div class="meta">${a.code || "—"}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted">${a.history?.length || 0} registros</div>
+        <button
+          onclick="event.stopPropagation(); eliminarApiladora('${a.id}')"
+          style="
+            background:none;
+            border:1px solid var(--gold-dark);
+            color:var(--gold-dark);
+            padding:4px 8px;
+            border-radius:8px;
+            font-size:11px;
+            cursor:pointer;
+          ">
+          Eliminar
+        </button>
+      </div>
     `;
-    div.onclick = () => selectApiladora(docSnap.id, ap);
-    apList.appendChild(div);
+
+    div.onclick = () => selectApiladora(a.id);
+    box.appendChild(div);
   });
-
-  lastSync.textContent = new Date().toLocaleString();
-});
-
-// ===============================
-// 📌 SELECCIONAR APILADORA
-// ===============================
-function selectApiladora(id, ap) {
-  currentApiladoraId = id;
-
-  emptyState.style.display = "none";
-  apDetails.style.display = "block";
-
-  apName.textContent = ap.name;
-  apCode.textContent = `Código: ${ap.code}`;
-
-  renderHistory(ap.history || []);
 }
 
-// ===============================
-// 🧾 HISTORIAL
-// ===============================
-function renderHistory(history) {
-  historyBox.innerHTML = "";
+/* ===========================
+   📌 SELECCIONAR
+=========================== */
+function selectApiladora(id) {
+  selectedId = id;
+  const a = apiladoras.find(x => x.id === id);
+  if (!a) return;
 
-  if (history.length === 0) {
-    historyBox.innerHTML = `<div class="muted">Sin registros</div>`;
-    nextMaint.textContent = "—";
-    return;
-  }
-
-  history
-    .slice()
-    .reverse()
-    .forEach((h) => {
-      const div = document.createElement("div");
-      div.className = "history-item";
-      div.innerHTML = `
-        <strong>${h.date}</strong>
-        <div class="muted">${h.desc}</div>
-        <div class="muted">Próx: ${h.next}</div>
-      `;
-      historyBox.appendChild(div);
-    });
-
-  nextMaint.textContent = history[history.length - 1].next;
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("apDetails").style.display = "block";
+  document.getElementById("apName").innerText = a.name;
+  document.getElementById("apCode").innerText = "Código: " + (a.code || "—");
+  renderHistory();
 }
 
-// ===============================
-// ➕ AGREGAR MANTENIMIENTO
-// ===============================
-btnAddMaint.addEventListener("click", async () => {
-  if (!currentApiladoraId) {
-    alert("Selecciona una apiladora");
+/* ===========================
+   🛠️ AGREGAR MANTENIMIENTO
+=========================== */
+async function addMaintenance() {
+  if (!selectedId) return alert("Selecciona una apiladora");
+
+  const desc = document.getElementById("mDesc").value.trim();
+  const date = document.getElementById("mDate").value || today();
+  const next = document.getElementById("mNext").value || "";
+
+  if (!desc) return alert("Descripción requerida");
+
+  const a = apiladoras.find(x => x.id === selectedId);
+  a.history.unshift({ desc, date, next });
+
+  await deleteDoc(doc(db, "apiladoras", a.id));
+  await addDoc(colApiladoras, a);
+
+  document.getElementById("mDesc").value = "";
+  document.getElementById("mDate").value = "";
+  document.getElementById("mNext").value = "";
+
+  await cargarApiladoras();
+}
+
+/* ===========================
+   📜 HISTORIAL
+=========================== */
+function renderHistory() {
+  const box = document.getElementById("history");
+  box.innerHTML = "";
+
+  const a = apiladoras.find(x => x.id === selectedId);
+  if (!a || !a.history.length) {
+    box.innerHTML = `<div class="muted">Sin registros</div>`;
     return;
   }
 
-  if (!mDesc.value || !mDate.value || !mNext.value) {
-    alert("Completa todos los campos");
-    return;
-  }
-
-  const ref = doc(db, "apiladoras", currentApiladoraId);
-
-  await updateDoc(ref, {
-    history: arrayUnion({
-      desc: mDesc.value,
-      date: mDate.value,
-      next: mNext.value,
-      createdAt: new Date()
-    })
+  a.history.forEach(h => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `
+      <strong>${h.desc}</strong>
+      <div class="muted">Fecha: ${h.date}</div>
+      <div class="muted">Próx: ${h.next || "—"}</div>
+    `;
+    box.appendChild(div);
   });
+}
 
-  mDesc.value = "";
-  mDate.value = "";
-  mNext.value = "";
+/* ===========================
+   🔔 ALERTAS
+=========================== */
+function renderAlerts() {
+  const box = document.getElementById("alertsBox");
+  box.innerHTML = `<div class="muted">No hay alertas</div>`;
+}
+
+/* ===========================
+   🚀 INICIO
+=========================== */
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnNew").onclick = addApiladora;
+  document.getElementById("btnAddMaint").onclick = addMaintenance;
+  document.getElementById("globalSearch").oninput = e => renderList(e.target.value);
+
+  cargarApiladoras();
 });
