@@ -1,5 +1,5 @@
 // ===============================
-// 🔥 FIREBASE CONFIG
+// FIREBASE SDK
 // ===============================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -7,11 +7,16 @@ import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
   doc,
-  onSnapshot
+  deleteDoc,
+  updateDoc,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ===============================
+// CONFIGURACIÓN (TUYA)
+// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyA6Ocj2bhf2zGAfakobaFIVS9qMQVwsVtY",
   authDomain: "ricardo-apiladoras.firebaseapp.com",
@@ -25,231 +30,201 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ===============================
-// 🔧 VARIABLES
+// ESTADO
 // ===============================
 let apiladoras = [];
 let selectedId = null;
 
 // ===============================
-// 🔧 UTILIDADES
+// UTIL
 // ===============================
-const uid = () => Math.random().toString(36).slice(2, 10);
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date().toISOString().slice(0,10);
 
 // ===============================
-// 🔥 ESCUCHAR FIRESTORE (TIEMPO REAL)
+// CARGAR DESDE FIREBASE
 // ===============================
-onSnapshot(collection(db, "apiladoras"), (snapshot) => {
-  apiladoras = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+async function loadApiladoras() {
+  apiladoras = [];
+  const q = query(collection(db, "apiladoras"), orderBy("created", "desc"));
+  const snap = await getDocs(q);
+
+  snap.forEach(docu => {
+    apiladoras.push({ id: docu.id, ...docu.data() });
+  });
+
   renderList();
-  renderAlerts();
-  document.getElementById("lastSync").innerText = new Date().toLocaleString();
-});
-
-// ===============================
-// 🗑️ ELIMINAR APILADORA (REAL)
-// ===============================
-async function eliminarApiladora(id) {
-  console.log("🗑 Eliminando apiladora:", id);
-
-  if (!confirm("¿Seguro que deseas eliminar esta apiladora?")) return;
-
-  try {
-    await deleteDoc(doc(db, "apiladoras", id));
-    console.log("✅ Eliminada correctamente de Firestore");
-  } catch (error) {
-    console.error("❌ Error al eliminar:", error);
-    alert("No se pudo eliminar en Firestore");
-  }
 }
 
 // ===============================
-// 📋 RENDER LISTA (BOTÓN FUNCIONA)
+// RENDER LISTA
 // ===============================
-function renderList(filter = "") {
-  const box = document.getElementById("apList");
-  box.innerHTML = "";
+function renderList() {
+  const list = document.getElementById('apList');
+  list.innerHTML = '';
+  totalCount.innerText = apiladoras.length;
 
-  let list = apiladoras;
-  if (filter) {
-    const q = filter.toLowerCase();
-    list = list.filter(a =>
-      a.name.toLowerCase().includes(q) ||
-      (a.code || "").toLowerCase().includes(q)
-    );
-  }
-
-  document.getElementById("totalCount").innerText = list.length;
-
-  if (list.length === 0) {
-    box.innerHTML = `<div class="muted">No hay apiladoras</div>`;
+  if (apiladoras.length === 0) {
+    list.innerHTML = `<div class="muted">No hay apiladoras</div>`;
     return;
   }
 
-  list.forEach(a => {
-    const el = document.createElement("div");
-    el.className = "ap-item";
+  apiladoras.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'ap-item';
 
-    const left = document.createElement("div");
-    left.innerHTML = `
-      <strong>${a.name}</strong>
-      <div class="meta">${a.code || "—"}</div>
+    div.innerHTML = `
+      <div>
+        <strong>${a.name}</strong>
+        <div class="muted">${a.code || ''}</div>
+      </div>
+      <button class="ghost">Eliminar</button>
     `;
 
-    const right = document.createElement("div");
-    right.style.textAlign = "right";
+    div.querySelector('button').onclick = (e) => {
+      e.stopPropagation();
+      deleteApiladora(a.id);
+    };
 
-    const count = document.createElement("div");
-    count.className = "muted";
-    count.innerText = `${a.history?.length || 0} registros`;
-
-    const btn = document.createElement("button");
-    btn.className = "ghost";
-    btn.innerText = "Eliminar";
-
-deleteBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  eliminarApiladora(a.id);
-});
-
-
-    right.appendChild(count);
-    right.appendChild(btn);
-
-    el.appendChild(left);
-    el.appendChild(right);
-
-    el.addEventListener("click", () => selectApiladora(a.id));
-    box.appendChild(el);
+    div.onclick = () => selectApiladora(a.id);
+    list.appendChild(div);
   });
 }
 
 // ===============================
-// 📌 SELECCIONAR
+// SELECCIONAR
 // ===============================
 function selectApiladora(id) {
   selectedId = id;
   const a = apiladoras.find(x => x.id === id);
   if (!a) return;
 
-  document.getElementById("emptyState").style.display = "none";
-  document.getElementById("apDetails").style.display = "block";
-  document.getElementById("apName").innerText = a.name;
-  document.getElementById("apCode").innerText = "Código: " + (a.code || "—");
-  document.getElementById("nextMaint").innerText = getNextFor(a) || "—";
+  emptyState.style.display = 'none';
+  apDetails.style.display = 'block';
+
+  apName.innerText = a.name;
+  apCode.innerText = a.code || '—';
+
+  const next = a.history?.find(h => h.next)?.next;
+  nextMaint.innerText = next || '—';
+
   renderHistory();
 }
 
-function getNextFor(a) {
-  const future = (a.history || []).filter(h => h.next).map(h => h.next).sort();
-  return future[0] || "";
-}
-
 // ===============================
-// ➕ NUEVA APILADORA
-// ===============================
-async function addApiladora() {
-  const name = prompt("Nombre de la apiladora");
-  if (!name) return;
-  const code = prompt("Código (opcional)") || "";
-
-  await addDoc(collection(db, "apiladoras"), {
-    name,
-    code,
-    history: []
-  });
-}
-
-// ===============================
-// ➕ MANTENIMIENTO
-// ===============================
-async function addMaintenance() {
-  if (!selectedId) return alert("Selecciona una apiladora");
-
-  const desc = document.getElementById("mDesc").value.trim();
-  const date = document.getElementById("mDate").value || today();
-  const next = document.getElementById("mNext").value || "";
-
-  if (!desc) return alert("Describe el mantenimiento");
-
-  const a = apiladoras.find(x => x.id === selectedId);
-  a.history.unshift({ id: uid(), desc, date, next });
-
-  await addDoc(collection(db, "apiladoras"), { ...a });
-}
-
-// ===============================
-// 📜 HISTORIAL
+// HISTORIAL
 // ===============================
 function renderHistory() {
-  const box = document.getElementById("history");
-  box.innerHTML = "";
+  history.innerHTML = '';
   const a = apiladoras.find(x => x.id === selectedId);
-  if (!a || !a.history?.length) {
-    box.innerHTML = `<div class="muted">Sin historial</div>`;
+  if (!a || !a.history || a.history.length === 0) {
+    history.innerHTML = `<div class="muted">Sin registros</div>`;
     return;
   }
 
   a.history.forEach(h => {
-    const div = document.createElement("div");
-    div.className = "history-item";
-    div.innerHTML = `
-      <strong>${h.desc}</strong>
-      <div class="muted">Fecha: ${h.date} | Próx: ${h.next || "—"}</div>
+    history.innerHTML += `
+      <div class="history-item">
+        <strong>${h.desc}</strong><br>
+        Fecha: ${h.date} — Próx: ${h.next || '—'}
+      </div>
     `;
-    box.appendChild(div);
   });
 }
 
 // ===============================
-// 🔔 ALERTAS
+// NUEVA APILADORA
 // ===============================
-function renderAlerts() {
-  const box = document.getElementById("alertsBox");
-  box.innerHTML = "";
+async function addApiladora() {
+  const name = prompt('Nombre de la apiladora');
+  if (!name) return;
 
-  const now = new Date();
-  const upcoming = [];
+  const code = prompt('Código (opcional)');
 
-  apiladoras.forEach(a => {
-    (a.history || []).forEach(h => {
-      if (h.next) {
-        const d = new Date(h.next + "T00:00:00");
-        const diff = Math.ceil((d - now) / 86400000);
-        if (diff >= 0 && diff <= 365) {
-          upcoming.push({ a, h, diff });
-        }
-      }
-    });
+  await addDoc(collection(db, "apiladoras"), {
+    name,
+    code,
+    history: [],
+    created: Date.now()
   });
 
-  if (!upcoming.length) {
-    box.innerHTML = `<div class="muted">No hay alertas</div>`;
-    return;
+  loadApiladoras();
+}
+
+// ===============================
+// MANTENIMIENTO
+// ===============================
+async function addMaintenance() {
+  if (!selectedId) return alert('Selecciona una apiladora');
+
+  const desc = mDesc.value.trim();
+  if (!desc) return;
+
+  const a = apiladoras.find(x => x.id === selectedId);
+
+  const newHistory = [
+    {
+      desc,
+      date: mDate.value || today(),
+      next: mNext.value || ''
+    },
+    ...(a.history || [])
+  ];
+
+  await updateDoc(doc(db, "apiladoras", selectedId), {
+    history: newHistory
+  });
+
+  mDesc.value = '';
+  mDate.value = '';
+  mNext.value = '';
+
+  loadApiladoras();
+  selectApiladora(selectedId);
+}
+
+// ===============================
+// ELIMINAR (🔥 DEFINITIVO)
+// ===============================
+async function deleteApiladora(id) {
+  if (!confirm('¿Eliminar apiladora definitivamente?')) return;
+
+  await deleteDoc(doc(db, "apiladoras", id));
+
+  if (selectedId === id) {
+    selectedId = null;
+    apDetails.style.display = 'none';
+    emptyState.style.display = 'block';
   }
 
-  upcoming.sort((x, y) => x.diff - y.diff);
-
-  upcoming.slice(0, 6).forEach(u => {
-    const el = document.createElement("div");
-    el.className = "alert-item";
-    el.innerHTML = `
-      <strong>${u.a.name}</strong>
-      <div class="muted">${u.h.next}</div>
-      <div class="pill">${u.diff}d</div>
-    `;
-    box.appendChild(el);
-  });
+  loadApiladoras();
 }
 
 // ===============================
-// 🎯 EVENTOS
+// MENÚ
 // ===============================
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnNew").addEventListener("click", addApiladora);
-  document.getElementById("btnAddMaint").addEventListener("click", addMaintenance);
-  document.getElementById("globalSearch").addEventListener("input", e => renderList(e.target.value));
+function showView(view) {
+  document.querySelectorAll('[id^="view-"]').forEach(v => v.style.display = 'none');
+  document.getElementById(`view-${view}`).style.display = 'block';
+
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+}
+
+// ===============================
+// INIT
+// ===============================
+document.addEventListener('DOMContentLoaded', () => {
+  btnNew.onclick = addApiladora;
+  btnAddMaint.onclick = addMaintenance;
+
+  document.querySelectorAll('.menu button').forEach(btn => {
+    btn.onclick = () => showView(btn.dataset.view);
+  });
+
+  showView('list');
+  loadApiladoras();
 });
+
 
 
 
