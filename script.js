@@ -49,21 +49,19 @@ onSnapshot(collection(db, "apiladoras"), (snapshot) => {
 // ===============================
 // 🗑️ ELIMINAR APILADORA (REAL)
 // ===============================
-window.eliminarApiladora = async (id) => {
-  if (!confirm("¿Eliminar esta apiladora y todo su historial?")) return;
+async function eliminarApiladora(id) {
+  console.log("🗑 Eliminando apiladora:", id);
+
+  if (!confirm("¿Seguro que deseas eliminar esta apiladora?")) return;
 
   try {
     await deleteDoc(doc(db, "apiladoras", id));
-    if (selectedId === id) {
-      selectedId = null;
-      document.getElementById("apDetails").style.display = "none";
-      document.getElementById("emptyState").style.display = "block";
-    }
-  } catch (e) {
-    alert("Error al eliminar");
-    console.error(e);
+    console.log("✅ Eliminada correctamente de Firestore");
+  } catch (error) {
+    console.error("❌ Error al eliminar:", error);
+    alert("No se pudo eliminar en Firestore");
   }
-};
+}
 
 // ===============================
 // 📋 RENDER LISTA (BOTÓN FUNCIONA)
@@ -109,10 +107,11 @@ function renderList(filter = "") {
     btn.className = "ghost";
     btn.innerText = "Eliminar";
 
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      eliminarApiladora(a.id);
-    });
+deleteBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  eliminarApiladora(a.id);
+});
+
 
     right.appendChild(count);
     right.appendChild(btn);
@@ -251,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnAddMaint").addEventListener("click", addMaintenance);
   document.getElementById("globalSearch").addEventListener("input", e => renderList(e.target.value));
 });
+
 
 
 
