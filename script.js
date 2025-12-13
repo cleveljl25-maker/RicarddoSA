@@ -1,22 +1,17 @@
 // ===============================
-// Firebase SDK
+// 🔥 FIREBASE CONFIG
 // ===============================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
   addDoc,
+  getDocs,
   deleteDoc,
-  updateDoc,
   doc,
-  onSnapshot,
-  query,
-  orderBy
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ===============================
-// Firebase config (TU PROYECTO)
-// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyA6Ocj2bhf2zGAfakobaFIVS9qMQVwsVtY",
   authDomain: "ricardo-apiladoras.firebaseapp.com",
@@ -28,204 +23,234 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const colRef = collection(db, "apiladoras");
 
+// ===============================
+// 🔧 VARIABLES
 // ===============================
 let apiladoras = [];
 let selectedId = null;
 
-const today = () => new Date().toISOString().slice(0,10);
+// ===============================
+// 🔧 UTILIDADES
+// ===============================
+const uid = () => Math.random().toString(36).slice(2, 10);
+const today = () => new Date().toISOString().slice(0, 10);
 
 // ===============================
-// 🔥 LISTENER EN TIEMPO REAL
+// 🔥 ESCUCHAR FIRESTORE (TIEMPO REAL)
 // ===============================
-onSnapshot(query(colRef, orderBy("name")), (snap) => {
-  apiladoras = snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+onSnapshot(collection(db, "apiladoras"), (snapshot) => {
+  apiladoras = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   renderList();
   renderAlerts();
+  document.getElementById("lastSync").innerText = new Date().toLocaleString();
 });
 
 // ===============================
-// RENDER LISTA
+// 🗑️ ELIMINAR APILADORA (REAL)
 // ===============================
-function renderList(filter=''){
-  const box = document.getElementById('apList');
-  box.innerHTML = '';
+window.eliminarApiladora = async (id) => {
+  if (!confirm("¿Eliminar esta apiladora y todo su historial?")) return;
+
+  try {
+    await deleteDoc(doc(db, "apiladoras", id));
+    if (selectedId === id) {
+      selectedId = null;
+      document.getElementById("apDetails").style.display = "none";
+      document.getElementById("emptyState").style.display = "block";
+    }
+  } catch (e) {
+    alert("Error al eliminar");
+    console.error(e);
+  }
+};
+
+// ===============================
+// 📋 RENDER LISTA (BOTÓN FUNCIONA)
+// ===============================
+function renderList(filter = "") {
+  const box = document.getElementById("apList");
+  box.innerHTML = "";
 
   let list = apiladoras;
-  if(filter){
+  if (filter) {
     const q = filter.toLowerCase();
     list = list.filter(a =>
       a.name.toLowerCase().includes(q) ||
-      (a.code||'').toLowerCase().includes(q)
+      (a.code || "").toLowerCase().includes(q)
     );
   }
 
-  document.getElementById('totalCount').innerText = list.length;
+  document.getElementById("totalCount").innerText = list.length;
+
+  if (list.length === 0) {
+    box.innerHTML = `<div class="muted">No hay apiladoras</div>`;
+    return;
+  }
 
   list.forEach(a => {
-    const el = document.createElement('div');
-    el.className = 'ap-item';
-    el.innerHTML = `
-      <div>
-        <strong>${a.name}</strong>
-        <div class="meta">${a.code || '—'}</div>
-      </div>
-      <div style="text-align:right">
-        <div class="muted">${a.history?.length || 0} registros</div>
-        <button class="btn ghost" style="margin-top:4px"
-          onclick="event.stopPropagation(); eliminarApiladora('${a.id}')">
-          Eliminar
-        </button>
-      </div>
+    const el = document.createElement("div");
+    el.className = "ap-item";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <strong>${a.name}</strong>
+      <div class="meta">${a.code || "—"}</div>
     `;
-    el.onclick = () => selectApiladora(a.id);
+
+    const right = document.createElement("div");
+    right.style.textAlign = "right";
+
+    const count = document.createElement("div");
+    count.className = "muted";
+    count.innerText = `${a.history?.length || 0} registros`;
+
+    const btn = document.createElement("button");
+    btn.className = "ghost";
+    btn.innerText = "Eliminar";
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      eliminarApiladora(a.id);
+    });
+
+    right.appendChild(count);
+    right.appendChild(btn);
+
+    el.appendChild(left);
+    el.appendChild(right);
+
+    el.addEventListener("click", () => selectApiladora(a.id));
     box.appendChild(el);
   });
 }
 
 // ===============================
-// 🔥 ELIMINAR REAL EN FIRESTORE
+// 📌 SELECCIONAR
 // ===============================
-window.eliminarApiladora = async (id) => {
-  if(!confirm("¿Eliminar apiladora y todo su historial?")) return;
-  await deleteDoc(doc(db, "apiladoras", id));
-  if(selectedId === id){
-    selectedId = null;
-    document.getElementById('apDetails').style.display='none';
-    document.getElementById('emptyState').style.display='block';
-  }
-};
-
-// ===============================
-// SELECCIONAR
-// ===============================
-function selectApiladora(id){
+function selectApiladora(id) {
   selectedId = id;
-  const a = apiladoras.find(x=>x.id===id);
-  if(!a) return;
+  const a = apiladoras.find(x => x.id === id);
+  if (!a) return;
 
-  document.getElementById('emptyState').style.display='none';
-  document.getElementById('apDetails').style.display='block';
-  document.getElementById('apName').innerText = a.name;
-  document.getElementById('apCode').innerText = 'Código: ' + (a.code||'—');
-  document.getElementById('nextMaint').innerText = getNext(a) || '—';
-
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("apDetails").style.display = "block";
+  document.getElementById("apName").innerText = a.name;
+  document.getElementById("apCode").innerText = "Código: " + (a.code || "—");
+  document.getElementById("nextMaint").innerText = getNextFor(a) || "—";
   renderHistory();
 }
 
-function getNext(a){
-  return (a.history||[])
-    .map(h=>h.next)
-    .filter(Boolean)
-    .sort()[0];
+function getNextFor(a) {
+  const future = (a.history || []).filter(h => h.next).map(h => h.next).sort();
+  return future[0] || "";
 }
 
 // ===============================
-// AGREGAR APILADORA
+// ➕ NUEVA APILADORA
 // ===============================
-async function addApiladora(){
-  const name = prompt("Nombre de la apiladora:");
-  if(!name) return;
-  const code = prompt("Código (opcional):");
+async function addApiladora() {
+  const name = prompt("Nombre de la apiladora");
+  if (!name) return;
+  const code = prompt("Código (opcional)") || "";
 
-  await addDoc(colRef, {
+  await addDoc(collection(db, "apiladoras"), {
     name,
-    code: code || '',
+    code,
     history: []
   });
 }
 
 // ===============================
-// AGREGAR MANTENIMIENTO
+// ➕ MANTENIMIENTO
 // ===============================
-async function addMaintenance(){
-  if(!selectedId) return alert("Selecciona una apiladora");
+async function addMaintenance() {
+  if (!selectedId) return alert("Selecciona una apiladora");
 
-  const desc = mDesc.value.trim();
-  const date = mDate.value || today();
-  const next = mNext.value;
+  const desc = document.getElementById("mDesc").value.trim();
+  const date = document.getElementById("mDate").value || today();
+  const next = document.getElementById("mNext").value || "";
 
-  if(!desc) return alert("Descripción obligatoria");
+  if (!desc) return alert("Describe el mantenimiento");
 
-  const a = apiladoras.find(x=>x.id===selectedId);
-  a.history.unshift({ desc, date, next });
+  const a = apiladoras.find(x => x.id === selectedId);
+  a.history.unshift({ id: uid(), desc, date, next });
 
-  await updateDoc(doc(db,"apiladoras",selectedId), {
-    history: a.history
-  });
-
-  mDesc.value = mDate.value = mNext.value = '';
+  await addDoc(collection(db, "apiladoras"), { ...a });
 }
 
 // ===============================
-// HISTORIAL
+// 📜 HISTORIAL
 // ===============================
-function renderHistory(){
-  const box = document.getElementById('history');
-  box.innerHTML = '';
-  const a = apiladoras.find(x=>x.id===selectedId);
-  if(!a || !a.history?.length){
-    box.innerHTML = '<div class="muted">Sin registros</div>';
+function renderHistory() {
+  const box = document.getElementById("history");
+  box.innerHTML = "";
+  const a = apiladoras.find(x => x.id === selectedId);
+  if (!a || !a.history?.length) {
+    box.innerHTML = `<div class="muted">Sin historial</div>`;
     return;
   }
 
-  a.history.forEach(h=>{
-    box.innerHTML += `
-      <div class="history-item">
-        <strong>${h.desc}</strong>
-        <div class="muted">${h.date} → ${h.next||'—'}</div>
-      </div>
+  a.history.forEach(h => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `
+      <strong>${h.desc}</strong>
+      <div class="muted">Fecha: ${h.date} | Próx: ${h.next || "—"}</div>
     `;
+    box.appendChild(div);
   });
 }
 
 // ===============================
-// 🔔 ALERTAS (FECHA NEXT)
+// 🔔 ALERTAS
 // ===============================
-function renderAlerts(){
-  const box = document.getElementById('alertsBox');
-  box.innerHTML = '';
+function renderAlerts() {
+  const box = document.getElementById("alertsBox");
+  box.innerHTML = "";
 
   const now = new Date();
+  const upcoming = [];
 
-  const alerts = [];
-  apiladoras.forEach(a=>{
-    (a.history||[]).forEach(h=>{
-      if(h.next){
-        const d = new Date(h.next+'T00:00');
-        const diff = Math.ceil((d-now)/(1000*60*60*24));
-        if(diff >= 0 && diff <= 30){
-          alerts.push({a,h,diff});
+  apiladoras.forEach(a => {
+    (a.history || []).forEach(h => {
+      if (h.next) {
+        const d = new Date(h.next + "T00:00:00");
+        const diff = Math.ceil((d - now) / 86400000);
+        if (diff >= 0 && diff <= 365) {
+          upcoming.push({ a, h, diff });
         }
       }
     });
   });
 
-  if(!alerts.length){
-    box.innerHTML = '<div class="muted">No hay alertas</div>';
+  if (!upcoming.length) {
+    box.innerHTML = `<div class="muted">No hay alertas</div>`;
     return;
   }
 
-  alerts.sort((x,y)=>x.diff-y.diff).slice(0,8).forEach(x=>{
-    box.innerHTML += `
-      <div class="alert-item">
-        <div>
-          <strong>${x.a.name}</strong>
-          <div class="muted">${x.h.desc} — ${x.h.next}</div>
-        </div>
-        <div class="pill">${x.diff}d</div>
-      </div>
+  upcoming.sort((x, y) => x.diff - y.diff);
+
+  upcoming.slice(0, 6).forEach(u => {
+    const el = document.createElement("div");
+    el.className = "alert-item";
+    el.innerHTML = `
+      <strong>${u.a.name}</strong>
+      <div class="muted">${u.h.next}</div>
+      <div class="pill">${u.diff}d</div>
     `;
+    box.appendChild(el);
   });
 }
 
 // ===============================
-btnNew.onclick = addApiladora;
-btnAddMaint.onclick = addMaintenance;
-globalSearch.oninput = e => renderList(e.target.value);
-histSearch.oninput = renderHistory;
+// 🎯 EVENTOS
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnNew").addEventListener("click", addApiladora);
+  document.getElementById("btnAddMaint").addEventListener("click", addMaintenance);
+  document.getElementById("globalSearch").addEventListener("input", e => renderList(e.target.value));
+});
+
+
 
