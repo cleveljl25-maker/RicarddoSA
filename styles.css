@@ -71,3 +71,34 @@ footer{font-size:13px;color:var(--muted);text-align:center;padding:12px}
   /* ensure right pane elements stack nicely */
   #apDetails > div {flex-direction:column}
 }
+/* ===== PANEL CENTRAL LIMPIO ===== */
+.main .card {
+  background: #ffffff;
+}
+
+/* ===== BOTONES CENTRALES ===== */
+.main button.btn {
+  font-size: 16px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+/* Hover más elegante */
+.main button.btn:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+/* Ajuste móvil */
+@media (max-width: 768px) {
+  .main .card {
+    padding: 20px;
+  }
+
+  .main button.btn {
+    font-size: 15px;
+    padding: 12px;
+  }
+}
+
