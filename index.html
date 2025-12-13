@@ -4,129 +4,120 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>Ricardo Santos S.A. — Registro de Apiladoras</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">RS</div>
-        <div class="brand-title">
-          <h1>Ricardo Santos S.A.</h1>
-          <p>Registro de mantenimiento — Apiladoras</p>
-        </div>
+<div class="app">
+
+  <!-- ===== SIDEBAR IZQUIERDA ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">RS</div>
+      <div class="brand-title">
+        <h1>Ricardo Santos S.A.</h1>
+        <p>Registro de mantenimiento</p>
       </div>
-
-      <div>
-        <div class="small">Buscar Apiladora</div>
-        <div class="search" style="margin-top:8px">
-          <input id="globalSearch" placeholder="Buscar por nombre o código..." />
-          <button class="btn" id="btnNew">Nuevo</button>
-        </div>
-      </div>
-
-      <div class="menu">
-        <button class="active" data-view="list">Lista de Apiladoras</button>
-        <button data-view="alerts">Alertas de mantenimiento</button>
-        <button data-view="settings">Ajustes / Exportar</button>
-      </div>
-
-      <div>
-        <div class="small">Alertas próximas</div>
-        <div class="alerts" id="alertsBox">
-          <!-- alert items injected -->
-          <div class="muted" style="padding:8px">No hay alertas</div>
-        </div>
-      </div>
-
-      <div class="small" style="margin-top:auto">Última sincronización: <span id="lastSync">—</span></div>
-    </aside>
-
-    <main class="main">
-      <div class="card topbar">
-        <div>
-          <div class="title">Ricardo Santos S.A. — Panel</div>
-          <div class="muted">Gestiona tus apiladoras, registra mantenimientos y revisa el historial</div>
-        </div>
-        <div style="text-align:right">
-          <div class="muted">Usuario: <strong>Ricardo</strong></div>
-          <div class="muted">Fecha: <span id="today"></span></div>
-        </div>
-      </div>
-
-      <div class="content">
-        <section class="list card" id="leftPane">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <strong>Apiladoras</strong>
-            <div class="muted">Total: <span id="totalCount">0</span></div>
-          </div>
-
-          <div id="apList" style="overflow:auto;max-height:520px;padding-right:6px">
-            <!-- items -->
-          </div>
-
-          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-            <input id="filterDate" type="date" class="ghost" />
-            <button class="btn" id="btnFilterDate">Buscar por fecha</button>
-            <button id="btnClear" class="ghost">Limpiar</button>
-          </div>
-        </section>
-
-     <section class="card" id="rightPane">
-
-  <!-- VISTA LISTA -->
-  <div id="view-list">
-    <div id="emptyState">
-      <h3>Selecciona o crea una apiladora para ver su historial</h3>
-      <p class="muted">
-        Aquí verás todos los mantenimientos registrados para la apiladora seleccionada.
-      </p>
     </div>
 
-    <div id="apDetails" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div>
-          <h2 id="apName"></h2>
-          <div class="muted" id="apCode"></div>
-        </div>
-        <div>
-          <div class="muted">Próximo mantenimiento</div>
-          <strong id="nextMaint"></strong>
-        </div>
+    <!-- ALERTAS -->
+    <div style="margin-top:24px">
+      <div class="small">Alertas próximas</div>
+      <div class="alerts" id="alertsBox">
+        <div class="muted" style="padding:8px">No hay alertas</div>
       </div>
-
-      <input id="mDesc" placeholder="Descripción del mantenimiento" />
-      <input id="mDate" type="date" />
-      <input id="mNext" type="date" />
-      <button class="btn" id="btnAddMaint">Añadir</button>
-
-      <div id="history" style="margin-top:16px"></div>
     </div>
-  </div>
 
-  <!-- VISTA ALERTAS -->
-  <div id="view-alerts" style="display:none">
-    <h3>Alertas de mantenimiento</h3>
-    <div id="alertsPanel"></div>
-  </div>
+    <div class="small" style="margin-top:auto">
+      Última sincronización:
+      <span id="lastSync">—</span>
+    </div>
+  </aside>
 
-  <!-- VISTA AJUSTES -->
-  <div id="view-settings" style="display:none">
-    <h3>Ajustes</h3>
-    <p class="muted">Sin funciones adicionales por ahora.</p>
-  </div>
+  <!-- ===== PANEL PRINCIPAL ===== -->
+  <main class="main">
 
-</section>
-
+    <!-- TOPBAR -->
+    <div class="card topbar">
+      <div>
+        <div class="title">Panel Principal</div>
+        <div class="muted">Gestión de apiladoras y mantenimiento</div>
       </div>
+      <div style="text-align:right">
+        <div class="muted">Usuario: <strong>Ricardo</strong></div>
+        <div class="muted">Fecha: <span id="today"></span></div>
+      </div>
+    </div>
 
-      <footer class="muted">Diseñado y Creado por Clevel JL.</footer>
-    </main>
-  </div>
+    <!-- ===== CONTENIDO CENTRAL ===== -->
+    <div class="content">
 
-  <script type="module" src="script.js"></script>
+      <!-- PANEL DERECHO LIMPIO -->
+      <section class="card" style="
+        flex:1;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      ">
+
+        <div style="
+          display:flex;
+          flex-direction:column;
+          gap:18px;
+          width:320px;
+          text-align:center;
+        ">
+
+          <!-- BOTÓN BUSCAR -->
+          <button class="btn" onclick="document.getElementById('globalSearch').focus()">
+            🔍 Buscar Apiladora
+          </button>
+
+          <!-- BOTÓN LISTA -->
+          <button class="btn" onclick="document.getElementById('leftPane').scrollIntoView({behavior:'smooth'})">
+            📋 Lista de Apiladoras
+          </button>
+
+          <!-- BOTÓN ALERTAS -->
+          <button class="btn" onclick="document.getElementById('alertsBox').scrollIntoView({behavior:'smooth'})">
+            ⏰ Alertas de Mantenimiento
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- ===== PANEL LISTA (OCULTO VISUALMENTE, NO FUNCIONALMENTE) ===== -->
+      <section class="list card" id="leftPane" style="display:none">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>Apiladoras</strong>
+          <div class="muted">Total: <span id="totalCount">0</span></div>
+        </div>
+
+        <div id="apList"></div>
+
+      </section>
+
+    </div>
+
+    <footer class="muted">
+      Diseñado y creado por <strong>Clevel JL</strong>.
+    </footer>
+
+  </main>
+
+</div>
+
+<!-- INPUT OCULTO PARA BUSCAR (LO USA EL SCRIPT) -->
+<input id="globalSearch" style="display:none" />
+
+<script type="module" src="script.js"></script>
 </body>
 </html>
+ 
+
 
 
