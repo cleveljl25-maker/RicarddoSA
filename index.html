@@ -73,49 +73,52 @@
           </div>
         </section>
 
-        <section class="card" id="rightPane">
-          <div id="emptyState">
-            <h3>Selecciona o crea una apiladora para ver su historial</h3>
-            <p class="muted">Aquí verás todos los mantenimientos registrados para la apiladora seleccionada, y podrás añadir nuevas entradas.</p>
-          </div>
+     <section class="card" id="rightPane">
 
-          <div id="apDetails" style="display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px">
-              <div>
-                <h2 id="apName">Apiladora</h2>
-                <div class="muted" id="apCode">Código: —</div>
-              </div>
-              <div style="text-align:right">
-                <div class="muted">Próximo mantenimiento:</div>
-                <div id="nextMaint" style="font-weight:700;color:var(--gold-dark)">—</div>
-              </div>
-            </div>
+  <!-- VISTA LISTA -->
+  <div id="view-list">
+    <div id="emptyState">
+      <h3>Selecciona o crea una apiladora para ver su historial</h3>
+      <p class="muted">
+        Aquí verás todos los mantenimientos registrados para la apiladora seleccionada.
+      </p>
+    </div>
 
-            <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-              <div style="flex:1;min-width:260px">
-                <div class="small">Registrar Mantenimiento</div>
-                <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
-                  <input id="mDesc" placeholder="Descripción del mantenimiento" />
-                  <div class="form-row">
-                    <input id="mDate" type="date" />
-                    <input id="mNext" type="date" />
-                  </div>
-                  <div style="display:flex;gap:8px">
-                    <button class="btn" id="btnAddMaint">Añadir</button>
-                    <!-- botón Export eliminado -->
-                  </div>
-                </div>
-              </div>
+    <div id="apDetails" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <h2 id="apName"></h2>
+          <div class="muted" id="apCode"></div>
+        </div>
+        <div>
+          <div class="muted">Próximo mantenimiento</div>
+          <strong id="nextMaint"></strong>
+        </div>
+      </div>
 
-              <div style="width:320px;min-width:240px">
-                <div class="small">Historial filtrable</div>
-                <input id="histSearch" placeholder="Buscar en historial (fecha, texto)..." style="margin-top:8px" />
-                <div id="history" class="history-list" style="margin-top:10px;max-height:360px;overflow:auto"></div>
-              </div>
-            </div>
-          </div>
+      <input id="mDesc" placeholder="Descripción del mantenimiento" />
+      <input id="mDate" type="date" />
+      <input id="mNext" type="date" />
+      <button class="btn" id="btnAddMaint">Añadir</button>
 
-        </section>
+      <div id="history" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- VISTA ALERTAS -->
+  <div id="view-alerts" style="display:none">
+    <h3>Alertas de mantenimiento</h3>
+    <div id="alertsPanel"></div>
+  </div>
+
+  <!-- VISTA AJUSTES -->
+  <div id="view-settings" style="display:none">
+    <h3>Ajustes</h3>
+    <p class="muted">Sin funciones adicionales por ahora.</p>
+  </div>
+
+</section>
+
       </div>
 
       <footer class="muted">Diseñado y Creado por Clevel JL.</footer>
@@ -125,4 +128,5 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
