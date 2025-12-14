@@ -234,4 +234,48 @@ footer{font-size:13px;color:var(--muted);text-align:center;padding:12px}
   }
 }
 
+/* ===============================
+   CORRECCIÓN CENTRADO TARJETAS
+   =============================== */
+
+/* Forzar que el panel derecho use TODO el ancho */
+.main .content #rightPane {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 40px 20px !important;
+  box-sizing: border-box;
+}
+
+/* El contenedor de las tarjetas */
+.main .content #rightPane .dashboard-cards {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 28px !important;
+  width: 100% !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+}
+
+/* Tarjetas */
+.main .content #rightPane .dash-card {
+  flex: 0 0 260px;
+}
+
+/* ===============================
+   RESPONSIVE (MÓVIL)
+   =============================== */
+@media (max-width: 768px) {
+  .main .content #rightPane .dashboard-cards {
+    flex-direction: column !important;
+  }
+
+  .main .content #rightPane .dash-card {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
 
