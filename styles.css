@@ -168,4 +168,70 @@ footer{font-size:13px;color:var(--muted);text-align:center;padding:12px}
   }
 }
 
+/* ===== PANEL DERECHO ===== */
+#rightPane {
+  display: flex;
+  align-items: center;        /* centra vertical */
+  justify-content: center;    /* centra horizontal */
+  min-height: 520px;
+  background: #fff;
+}
+
+/* ===== CONTENEDOR DE TARJETAS ===== */
+.dashboard-cards {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;   /* evita que se vayan demasiado a la derecha */
+  padding: 20px;
+}
+
+/* ===== TARJETAS ===== */
+.dash-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 26px 22px;
+  width: 260px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.dash-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+}
+
+.dash-icon {
+  font-size: 42px;
+  margin-bottom: 14px;
+}
+
+.dash-card h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.dash-card p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* ===== RESPONSIVE (TELÉFONO) ===== */
+@media (max-width: 768px) {
+  .dashboard-cards {
+    flex-direction: column;  /* vertical en móvil */
+  }
+
+  .dash-card {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
 
