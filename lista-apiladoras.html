@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lista de Apiladoras — Ricardo Santos S.A.</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="logo">RS</div>
+      <div>
+        <h1>Ricardo Santos S.A.</h1>
+        <p>Registro de mantenimiento</p>
+      </div>
+    </div>
+
+    <!-- BOTÓN VOLVER -->
+    <a href="index.html" class="menu-btn back-btn">
+      ⬅ Volver al panel
+    </a>
+
+    <!-- SUBMENÚ DE ACCIONES -->
+    <div class="submenu-actions">
+
+      <button class="btn" onclick="abrirModal()">
+        ➕ Nueva apiladora
+      </button>
+
+      <div class="search">
+        <input id="searchApiladora" placeholder="Buscar apiladora..." />
+        <button class="icon-btn">🔍</button>
+      </div>
+
+    </div>
+
+    <div class="alerts">
+      <strong>Alertas próximas</strong>
+      <div id="alertsBox" class="muted">Cargando…</div>
+    </div>
+
+    <div class="muted small">
+      Última sincronización: <span id="lastSync">—</span>
+    </div>
+
+  </aside>
+
+  <!-- ===== CONTENIDO ===== -->
+  <main class="main">
+
+    <div class="card topbar">
+      <div>
+        <h2>Lista de Apiladoras</h2>
+        <p class="muted">Visualiza y gestiona todas las apiladoras registradas</p>
+      </div>
+    </div>
+
+    <section class="card">
+
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Total:</strong>
+        <span id="totalCount">0</span>
+      </div>
+
+      <!-- AQUÍ SE CARGAN LAS APILADORAS -->
+      <div id="apList" style="margin-top:16px">
+        <!-- renderList() -->
+      </div>
+
+    </section>
+
+    <footer class="muted">
+      Diseñado y creado por <strong>Clevel JL</strong>
+    </footer>
+
+  </main>
+
+</div>
+
+<script type="module" src="app.js"></script>
+
+<script>
+  // Buscar apiladoras
+  document.getElementById('searchApiladora').addEventListener('input', e => {
+    if (window.renderList) {
+      window.renderList(e.target.value);
+    }
+  });
+
+  // Crear nueva apiladora
+  document.getElementById('btnNuevaApiladora').addEventListener('click', () => {
+    if (window.addApiladora) {
+      window.addApiladora();
+    }
+  });
+</script>
+
+<!-- MODAL NUEVA APILADORA -->
+<div id="modalApiladora" class="modal hidden">
+  <div class="modal-card">
+    <h3>Nueva Apiladora</h3>
+
+    <input
+      type="text"
+      id="nombreApiladora"
+      placeholder="Nombre de la apiladora"
+    />
+
+    <div class="modal-actions">
+      <button class="ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn" onclick="guardarApiladora()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="lista-apiladoras.js"></script>
+
+
+</body>
+</html>
